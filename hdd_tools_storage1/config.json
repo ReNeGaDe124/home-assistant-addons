@@ -1,7 +1,7 @@
 {
-  "name": "HDD Tools - Storage1",
+  "name": "HDD Tools - Storage",
   "version": "1.1.0",
-  "slug": "hdd_tools_storage1",
+  "slug": "hdd_tools_storage",
   "description": "HDD Tools provides S.M.A.R.T. information",
   "url": "https://github.com/ReNeGaDe124/home-assistant-addons",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
