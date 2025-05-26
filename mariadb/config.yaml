@@ -1,7 +1,7 @@
 ---
 version: 2.7.2
 slug: mariadb-haos
-name: MariaDB Home Assistant
+name: MariaDB - Home Assistant
 description: A SQL database server
 url: https://github.com/home-assistant/addons/tree/master/mariadb
 arch:
