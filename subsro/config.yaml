@@ -1,0 +1,35 @@
+name: Subs.ro Subtitle Downloader
+slug: subsro
+version: "1.0.0"
+description: Romanian subtitles from subs.ro for Movies and TV (Bazarr compatible)
+startup: services
+boot: auto
+ingress: true
+ingress_port: 8999
+panel_icon: mdi:subtitles
+arch:
+  - amd64
+  - aarch64
+  - armv7
+map:
+  - media:rw
+
+options:
+  subsro_api_key: ""
+  sonarr_url: ""
+  sonarr_api_key: ""
+  radarr_url: ""
+  radarr_api_key: ""
+  enable_movies: true
+  enable_tv: true
+  scan_interval: 3600
+
+schema:
+  subsro_api_key: str
+  sonarr_url: str
+  sonarr_api_key: str
+  radarr_url: str
+  radarr_api_key: str
+  enable_movies: bool
+  enable_tv: bool
+  scan_interval: int
