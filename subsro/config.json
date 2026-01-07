@@ -6,9 +6,16 @@
   "startup": "application",
   "boot": "auto",
   "arch": ["amd64", "arm64", "armv7"],
-  "map": ["media:rw"],
+  "host_network": true,
+  "ports": {
+    "8999/tcp": 8999
+  },
+  "ports_description": {
+    "8999/tcp": "Plex Webhook Listener"
+  },
+  "map": ["media:/media:rw"],
   "options": {
-    "plex_url": "http://localhost:32400",
+    "plex_url": "http://homeassistant.local:32400",
     "plex_token": "",
     "subsro_api_key": "",
     "scan_movies": true,
@@ -24,3 +31,4 @@
     "dry_run": "bool"
   }
 }
+
