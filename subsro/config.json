@@ -1,0 +1,26 @@
+{
+  "name": "Subs.ro Plex Subtitle Downloader",
+  "slug": "subsro_plex",
+  "version": "1.0.0",
+  "description": "Automatically downloads Romanian subtitles from Subs.ro for Plex media",
+  "startup": "application",
+  "boot": "auto",
+  "arch": ["amd64", "arm64", "armv7"],
+  "map": ["media:rw"],
+  "options": {
+    "plex_url": "http://localhost:32400",
+    "plex_token": "",
+    "subsro_api_key": "",
+    "scan_movies": true,
+    "scan_tv": true,
+    "dry_run": false
+  },
+  "schema": {
+    "plex_url": "str",
+    "plex_token": "str",
+    "subsro_api_key": "str",
+    "scan_movies": "bool",
+    "scan_tv": "bool",
+    "dry_run": "bool"
+  }
+}

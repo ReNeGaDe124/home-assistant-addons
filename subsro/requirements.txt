@@ -1,0 +1,5 @@
+requests
+plexapi
+flask
+rarfile
+py7zr
