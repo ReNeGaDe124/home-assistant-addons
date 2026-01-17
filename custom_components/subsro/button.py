@@ -37,4 +37,5 @@ class SubsroButton(ButtonEntity):
                     headers=headers
                 )
         except Exception as e:
+
             _LOGGER.error("Eroare buton %s: %s", self._attr_name, e)
