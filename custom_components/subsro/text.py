@@ -11,6 +11,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SubsroSearchInput(config, entry)])
 
 class SubsroSearchInput(TextEntity):
+    _attr_has_entity_name = True
     def __init__(self, config, entry):
         self._config, self._entry = config, entry
         self._attr_name = "Search & Download Subtitles"
@@ -38,6 +39,7 @@ class SubsroSearchInput(TextEntity):
         except Exception as e:
 
             _LOGGER.error("Eroare căutare: %s", e)
+
 
 
 
