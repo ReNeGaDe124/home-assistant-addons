@@ -36,14 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return web.Response(status=400)
 
         if data.get("secret") != secret:
-            _LOGGER.warning("Tentativă neautorizată de acces la webhook addon Subs.ro Plex Subtitles Downloader")
+            _LOGGER.warning("Tentativă neautorizată de acces la webhook addon Subs.ro Plex Subtitle Downloader")
             return web.Response(status=401)
 
         async_dispatcher_send(hass, SIGNAL_UPDATE, data)
         return web.Response(text="OK")
 
     webhook_register(
-        hass, DOMAIN, "Subs.ro Plex Subtitles Downloader Reverse API", WEBHOOK_ID, handle_webhook
+        hass, DOMAIN, "Subs.ro Plex Subtitle Downloader Reverse API", WEBHOOK_ID, handle_webhook
     )
 
     async def handle_search(call: ServiceCall):
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     else:
                         _LOGGER.info("Comanda de căutare pentru '%s' a fost trimisă.", keywords)
         except Exception as e:
-            _LOGGER.error("Eroare la conectarea cu addon-ul Subs.ro Plex Subtitles Downloader: %s", e)
+            _LOGGER.error("Eroare la conectarea cu addon-ul Subs.ro Plex Subtitle Downloader: %s", e)
 
     hass.services.async_register(DOMAIN, "search_and_download", handle_search)
 
@@ -76,4 +76,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
