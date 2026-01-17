@@ -314,7 +314,7 @@ def daily_scheduler():
         time.sleep(30)
 
 if __name__ == "__main__":
-    reporter.log("Addon Subs.ro Plex Subtitles Downloader pornit.")
+    reporter.log("Addon Subs.ro Plex Subtitle Downloader pornit.")
     reporter.report("Booting")
 
     for i in range(10):
@@ -336,4 +336,5 @@ if __name__ == "__main__":
     reporter.report("Idle")
     
     while True:
+
         time.sleep(3600)
