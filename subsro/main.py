@@ -130,10 +130,10 @@ def process(item, log_name):
 
 def cleanup_orphans():
     reporter.clear_log()
-    reporter.set_action("Cleanup Orphaned Subtitles")
+    reporter.set_action("Curățare subtitrări orfane")
     reporter.report("Processing", item="-")
     reporter.set_result("-")
-    reporter.log("=== [CLEANUP] PORNIRE CURĂȚENIE SUBTITRĂRI ORFANE ===")
+    reporter.log("=== [CLEANUP] PORNIRE CURĂȚARE SUBTITRĂRI ORFANE ===")
     
     try:
         plex_locations = set()
@@ -165,7 +165,7 @@ def cleanup_orphans():
         reporter.log("=== [CLEANUP] FINALIZAT ===")
         reporter.report("Idle")
 
-def process_single(rating_key, action_override="Automatic Subtitle Download", clear_log=True):
+def process_single(rating_key, action_override="Descărcare automată subtitrare", clear_log=True):
     if clear_log:
         reporter.clear_log()
         
@@ -191,7 +191,7 @@ def process_single(rating_key, action_override="Automatic Subtitle Download", cl
 
 def download_latest():
     reporter.clear_log()
-    reporter.set_action("Download Subtitle for Latest Video")
+    reporter.set_action("Descărcare subtitrare pentru cel mai recent video")
     reporter.report("Processing", item="Checking Latest Video")
     reporter.set_result("-")
     reporter.log("=== [LATEST] VERIFICARE ULTIMUL VIDEO ADĂUGAT ===")
@@ -220,10 +220,10 @@ def download_latest():
 
 def download_missing():
     reporter.clear_log()
-    reporter.set_action("Download Missing Subtitles")
+    reporter.set_action("Descărcare subtitrări lipsă")
     reporter.report("Processing", item="Scanning Library")
     reporter.set_result("-")
-    reporter.log("=== [MISSING] PORNIRE SCANARE SUBTITRĂRI LIPSĂ ===")
+    reporter.log("=== [MISSING] PORNIRE DESCĂRCARE SUBTITRĂRI LIPSĂ ===")
     count = 0
     try:
         for m in plex.library.section("Movies").all():
@@ -241,7 +241,7 @@ def download_missing():
 
 def search_and_download(keywords_input):
     reporter.clear_log()
-    reporter.set_action("Search & Download Subtitles")
+    reporter.set_action("Caută și descarcă subtitrari")
     reporter.set_result("-")
     reporter.report("Processing", item=f"Search: {keywords_input}")
     
@@ -339,4 +339,5 @@ if __name__ == "__main__":
     while True:
 
         time.sleep(3600)
+
 
