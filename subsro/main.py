@@ -160,9 +160,10 @@ def cleanup_orphans():
                     except: pass
     except Exception as e:
         reporter.log(f"[CLEANUP] Eroare: {e}")
-    
-    reporter.log("=== [CLEANUP] FINALIZAT ===")
-    reporter.report("Idle")
+
+    finally:
+        reporter.log("=== [CLEANUP] FINALIZAT ===")
+        reporter.report("Idle")
 
 def process_single(rating_key, action_override="Automatic Subtitle Download", clear_log=True):
     if clear_log:
@@ -338,3 +339,4 @@ if __name__ == "__main__":
     while True:
 
         time.sleep(3600)
+
