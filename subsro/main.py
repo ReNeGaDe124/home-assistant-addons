@@ -322,7 +322,7 @@ if __name__ == "__main__":
         threading.Thread(target=worker, args=(i+1,), daemon=True).start()
     
     from subsro.webhook import start_webhook
-    webhook_process_single = lambda rk: process_single(rk, action_override="Automatic Subtitle Download", clear_log=True)
+    webhook_process_single = lambda rk: process_single(rk, action_override="Descărcare automată subtitrare", clear_log=True)
     
     threading.Thread(target=start_webhook, args=(
         webhook_process_single, 
@@ -339,5 +339,6 @@ if __name__ == "__main__":
     while True:
 
         time.sleep(3600)
+
 
 
