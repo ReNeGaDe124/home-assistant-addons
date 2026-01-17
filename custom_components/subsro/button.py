@@ -1,6 +1,5 @@
 from homeassistant.components.button import ButtonEntity
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.util import slugify
 import async_timeout
 import logging
 from .const import DOMAIN, DEVICE_NAME
@@ -41,6 +40,7 @@ class SubsroButton(ButtonEntity):
         except Exception as e:
 
             _LOGGER.error("Eroare buton %s: %s", self._attr_name, e)
+
 
 
 
