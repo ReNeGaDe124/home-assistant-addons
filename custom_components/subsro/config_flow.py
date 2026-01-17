@@ -9,7 +9,7 @@ class SubsroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(
-                title="Subs.ro Plex Subtitles Downloader", 
+                title="Subs.ro Plex Subtitle Downloader", 
                 data=user_input
             )
 
@@ -19,4 +19,5 @@ class SubsroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_URL, default=DEFAULT_URL): str,
                 vol.Required(CONF_SECRET): str,
             })
+
         )
