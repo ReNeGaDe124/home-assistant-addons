@@ -18,7 +18,7 @@ class SubsroStatusSensor(SensorEntity):
         self._config = config
         self._attr_name = "Status"
         self._attr_unique_id = "subsro_plex_subtitle_downloader_status"
-        self._attr_native_value = "Offline"
+        self._attr_native_value = "Idle"
         
         self._attr_should_poll = True 
         
@@ -85,3 +85,4 @@ class SubsroStatusSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
 
         return DeviceInfo(identifiers={(DOMAIN, self._entry.entry_id)}, name=DEVICE_NAME)
+
