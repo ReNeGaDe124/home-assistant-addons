@@ -1,5 +1,6 @@
 from homeassistant.components.button import ButtonEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util import slugify
 import async_timeout
 import logging
 from .const import DOMAIN, DEVICE_NAME
@@ -19,7 +20,9 @@ class SubsroButton(ButtonEntity):
     def __init__(self, config, entry, name, endpoint, icon):
         self._config, self._entry, self._endpoint = config, entry, endpoint
         self._attr_name, self._attr_icon = name, icon
-        self._attr_unique_id = f"subsro_{endpoint}"
+        self._attr_unique_id = f"subsro_{endpoint.replace('/', '')}"
+        slug_name = slugify(name)
+        self.entity_id = f"{BUTTON_DOMAIN}.subsro_{slug_name}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -39,3 +42,4 @@ class SubsroButton(ButtonEntity):
         except Exception as e:
 
             _LOGGER.error("Eroare buton %s: %s", self._attr_name, e)
+
