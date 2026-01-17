@@ -17,12 +17,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SubsroButton(config, entry, *b) for b in buttons])
 
 class SubsroButton(ButtonEntity):
+    _attr_has_entity_name = True
     def __init__(self, config, entry, name, endpoint, icon):
         self._config, self._entry, self._endpoint = config, entry, endpoint
         self._attr_name, self._attr_icon = name, icon
-        self._attr_unique_id = f"subsro_{endpoint.replace('/', '')}"
-        slug_name = slugify(name)
-        self.entity_id = f"button.subsro_{slug_name}"
+        self._attr_unique_id = f"subsro_{endpoint}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -42,6 +41,7 @@ class SubsroButton(ButtonEntity):
         except Exception as e:
 
             _LOGGER.error("Eroare buton %s: %s", self._attr_name, e)
+
 
 
 
