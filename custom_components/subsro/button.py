@@ -22,7 +22,7 @@ class SubsroButton(ButtonEntity):
         self._attr_name, self._attr_icon = name, icon
         self._attr_unique_id = f"subsro_{endpoint.replace('/', '')}"
         slug_name = slugify(name)
-        self._entity_id = f"{BUTTON_DOMAIN}.subsro_{slug_name}"
+        self._entity_id = f"button.subsro_{slug_name}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -42,5 +42,6 @@ class SubsroButton(ButtonEntity):
         except Exception as e:
 
             _LOGGER.error("Eroare buton %s: %s", self._attr_name, e)
+
 
 
