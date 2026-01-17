@@ -15,6 +15,7 @@ class SubsroSearchInput(TextEntity):
         self._config, self._entry = config, entry
         self._attr_name = "Search & Download Subtitles"
         self._attr_unique_id = "subsro_search_and_download_subtitles"
+        self.entity_id = "text.subsro_search_and_download_subtitles"
         self._attr_icon, self._attr_mode = "mdi:magnify", "text"
         self._attr_native_value = ""
 
@@ -36,4 +37,5 @@ class SubsroSearchInput(TextEntity):
                     headers=headers
                 )
         except Exception as e:
+
             _LOGGER.error("Eroare căutare: %s", e)
