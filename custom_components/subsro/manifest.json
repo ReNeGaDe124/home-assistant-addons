@@ -1,6 +1,6 @@
 {
   "domain": "subsro",
-  "name": "Subs.ro Plex Subtitles Downloader",
+  "name": "Subs.ro Plex Subtitle Downloader",
   "version": "1.0.0",
   "documentation": "",
   "requirements": [],
@@ -8,4 +8,5 @@
   "codeowners": [],
   "config_flow": true,
   "iot_class": "local_push"
+
 }
