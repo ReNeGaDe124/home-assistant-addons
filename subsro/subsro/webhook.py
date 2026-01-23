@@ -9,7 +9,7 @@ try:
 except ImportError:
     serve = None
 
-def start_webhook(single_handler, download_handler, cleanup_handler, download_latest_handler, search_download_handler):
+def start_webhook(single_handler, download_handler, cleanup_handler, download_latest_handler, search_download_handler, search_delete_handler):
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
     app = Flask(__name__)
@@ -20,7 +20,8 @@ def start_webhook(single_handler, download_handler, cleanup_handler, download_la
             "download_call",
             "cleanup_call",
             "download_latest_call",
-            "search_download_call"
+            "search_download_call",
+            "search_delete_call"
         ]
 
         if request.endpoint in protected_endpoints:
@@ -87,6 +88,18 @@ def start_webhook(single_handler, download_handler, cleanup_handler, download_la
         print(f"API: Apel manual 'Caută și descarcă subtitrari' pentru: {keywords}")
         threading.Thread(target=search_download_handler, args=(keywords,)).start()
         return {"status": f"Căutare și descărcare subtitrări pornită pentru '{keywords}'"}, 200
+
+    @app.route("/search_and_delete_subtitles", methods=["POST"])
+    def search_delete_call():
+        data = request.get_json(silent=True) or request.form
+        keywords = data.get("keywords")
+        
+        if not keywords:
+            return {"error": "Missing 'keywords' parameter"}, 400
+
+        print(f"API: Apel manual 'Caută și șterge subtitrari' pentru: {keywords}")
+        threading.Thread(target=search_delete_handler, args=(keywords,)).start()
+        return {"status": f"Căutare și ștergere subtitrări pornită pentru '{keywords}'"}, 200
 
     if serve:
         print("Portul de conectare 8999 este activ.")

@@ -5,7 +5,6 @@ import threading
 import time
 import urllib3
 
-# Dezactivăm avertismentele pentru HTTPS nesecurizat
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Reporter:
@@ -17,7 +16,6 @@ class Reporter:
         self.webhook_path = "/api/webhook/subsro_sync_webhook"
         self.secret = os.getenv("WEBHOOK_SECRET")
         
-        # State intern
         self.current_activity = "Booting"
         self.current_item = "-"
         self.current_action = "Booting"
@@ -28,11 +26,15 @@ class Reporter:
         self.lock = threading.Lock()
         self.working_url = None
         
-        # Throttling
         self.last_send_time = 0
         self.min_interval = 2.0 
+        
+        self.debug_enabled = os.getenv("DEBUG_LOG", "false").lower() == "true"
 
     def log(self, message):
+        if "[DEBUG" in message and not self.debug_enabled:
+            return
+        
         print(message)
         should_send = False
         with self.lock:

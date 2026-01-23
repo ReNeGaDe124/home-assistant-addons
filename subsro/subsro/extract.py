@@ -44,11 +44,7 @@ def ensure_utf8(file_path):
     except Exception:
         return 'error'
 
-
-def extract_srt(archive_bytes, target_path):
-    filename = os.path.basename(target_path).upper()
-    v_match = re.search(r'S(\d+).*E(\d+)|(\d+)X(\d+)', filename)
-    is_episode = bool(v_match)
+def extract_srt(archive_bytes, target_path, target_season=None, target_episode=None):
     
     with tempfile.TemporaryDirectory() as tmp_dir:
         archive_path = os.path.join(tmp_dir, "subs.rar")
@@ -68,25 +64,44 @@ def extract_srt(archive_bytes, target_path):
             if not all_srt_files: return False
 
             chosen_srt = None
-            if is_episode:
-                target_s = int(v_match.group(1) or v_match.group(3))
-                target_e = int(v_match.group(2) or v_match.group(4))
+            
+            if target_season is not None and target_episode is not None:
                 for srt_path in all_srt_files:
                     srt_name = os.path.basename(srt_path).upper()
-                    s_match = re.search(r'S(\d+).*E(\d+)|(\d+)X(\d+)', srt_name)
+                    
+                    s_match = re.search(r'(?i)S(\d+).{0,6}E(\d+)|(\d+)X(\d+)', srt_name)
+                    
+                    found_s, found_e = None, None
                     if s_match:
                         found_s = int(s_match.group(1) or s_match.group(3))
                         found_e = int(s_match.group(2) or s_match.group(4))
-                        if found_s == target_s and found_e == target_e:
-                            chosen_srt = srt_path
-                            break
+                    else:
+                        e_only_match = re.search(r'(?i)[^a-z]E(\d+)[^a-z]', srt_name)
+                        if e_only_match:
+                            found_s = target_season 
+                            found_e = int(e_only_match.group(1))
+
+                    if found_s == target_season and found_e == target_episode:
+                        chosen_srt = srt_path
+                        break
+                
+                if chosen_srt is None:
+                    return False
+                    
             else:
                 all_srt_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
                 chosen_srt = all_srt_files[0]
 
             if chosen_srt:
                 ensure_utf8(chosen_srt)
+                if os.path.exists(target_path):
+                    try: os.remove(target_path)
+                    except: pass
                 shutil.move(chosen_srt, target_path)
+                try:
+                    os.utime(target_path, None)
+                except:
+                    pass
                 return True
             
             return False
