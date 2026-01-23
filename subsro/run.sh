@@ -6,6 +6,7 @@ export WEBHOOK_SECRET=$(jq -r .webhook_secret /data/options.json)
 export SCHEDULED_DOWNLOAD=$(jq -r .scheduled_download /data/options.json)
 export SCHEDULED_CLEANUP=$(jq -r .scheduled_cleanup /data/options.json)
 export SCAN_TIME=$(jq -r .scan_time /data/options.json)
+export DEBUG_LOG=$(jq -r .debug_log /data/options.json)
 export SUPERVISOR_TOKEN=$SUPERVISOR_TOKEN
 export PYTHONPATH=$PYTHONPATH:/app
 

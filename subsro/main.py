@@ -1,6 +1,7 @@
 import os
 import threading
 import requests
+from requests.adapters import HTTPAdapter
 import datetime
 import time
 import re
@@ -10,10 +11,21 @@ from subsro.api import SubsAPI
 from subsro.plex import get_media_file, get_ids, subtitle_path
 from subsro.extract import extract_srt, ensure_utf8
 from subsro.reporter import Reporter
+from subsro.matcher import sort_best_match
 
-plex = PlexServer(os.getenv("PLEX_URL"), os.getenv("PLEX_TOKEN"))
-subs = SubsAPI(os.getenv("SUBSRO_API_KEY"))
+plex_url = os.getenv("PLEX_URL")
+plex_token = os.getenv("PLEX_TOKEN")
+
+session = requests.Session()
+adapter = HTTPAdapter(pool_connections=20, pool_maxsize=20)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
+
+plex = PlexServer(plex_url, plex_token, session=session)
+
 reporter = Reporter()
+
+subs = SubsAPI(os.getenv("SUBSRO_API_KEY"), logger=reporter.log)
 
 process_queue = Queue()
 api_lock = threading.Lock()
@@ -74,8 +86,12 @@ def worker(worker_id):
                     should_go_idle = (active_workers == 0 and process_queue.empty())
                 
                 if should_go_idle:
+                     try:
+                        subs.clear_cache()
+                     except Exception as e:
+                        reporter.log(f"Eroare la golirea cache-ului: {e}")
                      reporter.report("Idle", item=item_name)
-
+                     
         except Exception as e:
             reporter.log(f"Eroare critică worker loop: {e}")
             time.sleep(5)
@@ -99,6 +115,17 @@ def process(item, log_name):
             reporter.log(f"CĂUTARE: '{log_name}'")
             try:
                 results = subs.search(field, val)
+                
+                if results:
+                    reporter.log(f"[DEBUG API] Total rezultate găsite: {len(results)}:")
+                    for i, res in enumerate(results[:100]):
+                        r_title = res.get('title', 'Fără titlu')
+                        r_desc = res.get('description', 'Fără descriere')
+                        r_id = res.get('id', 'N/A')
+                        reporter.log(f"[DEBUG]  #{i+1}: {r_title} (ID:{r_id}) | Desc: {r_desc}")
+                else:
+                    reporter.log(f"[DEBUG API] Niciun rezultat returnat de API.")
+
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 429: return 'rate_limited'
                 raise e
@@ -107,19 +134,42 @@ def process(item, log_name):
             reporter.log(f"SUBS.RO API: Nu există subtitrare pentru '{log_name}'")
             reporter.set_result("Nu (nu a fost gasită)")
             return 'done'
+        
+        video_season = None
+        video_episode = None
+        
+        if item.type == 'episode':
+            try:
+                video_season = int(item.parentIndex)
+                video_episode = int(item.index)
+            except: 
+                pass
+
+        try:
+            results = sort_best_match(results, f, video_season, video_episode, log_func=reporter.log)
+        except Exception as e:
+            reporter.log(f"Eroare matcher: {e}")
             
         for sub in results:
             try:
+                reporter.log(f"[DEBUG API DOWNLOAD] Solicitare conținut cu ID {sub['id']} - '{sub.get('title')}'")
+                
                 with api_lock:
-                    time.sleep(1) 
                     archive_bytes = subs.download(sub['id'])
-                if extract_srt(archive_bytes, srt):
+                
+                if extract_srt(archive_bytes, srt, video_season, video_episode):
                     reporter.log(f"SUBS.RO API: Subtitrare descărcată pentru '{log_name}'")
                     reporter.set_result("Yes")
                     return 'done'
-            except Exception: continue
+                else:
+                    reporter.log(f"[DEBUG API DOWNLOAD] Arhiva cu ID {sub['id']} nu a conținut episodul corect. Trec la următoarea.")
+                    continue
+
+            except Exception as e: 
+                reporter.log(f"[DEBUG API ERROR] Eroare la descărcare/extragere: {e}")
+                continue
         
-        reporter.log(f"SUBS.RO API: Subtitrare incompatibilă pentru '{log_name}'")
+        reporter.log(f"SUBS.RO API: Subtitrare negasită pentru '{log_name}'")
         reporter.set_result("Nu (nu a fost gasită)")
         return 'done'
         
@@ -210,6 +260,23 @@ def download_latest():
 
         if all_items:
             latest = sorted(all_items, key=lambda x: x.addedAt, reverse=True)[0]
+            
+            try:
+                latest.reload()
+                media_file = get_media_file(latest)
+                if media_file:
+                    srt_path = subtitle_path(media_file)
+                    if os.path.exists(srt_path):
+                        item_name = get_log_name(latest)
+                        reporter.set_item(item_name)
+                        reporter.set_result("Nu (subtitrarea există deja)")
+                        reporter.log(f"SKIP: Subtitrarea există deja pentru '{item_name}'")
+                        reporter.report("Idle")
+                        return
+            except Exception as e:
+                reporter.log(f"[LATEST] Eroare la verificarea existenței: {e}")
+            
+            
             process_single(latest.ratingKey, action_override="Download Subtitle for Latest Video", clear_log=False)
         else:
             reporter.report("Idle", item="Nu a fost găsit ultimul video")
@@ -298,6 +365,83 @@ def search_and_download(keywords_input):
         reporter.log(f"=== [SEARCH] NICIUN REZULTAT PENTRU: {required_words} ===")
         reporter.report("Idle", item="Fără rezultate")
 
+def search_and_delete(keywords_input):
+    reporter.clear_log()
+    reporter.set_action("Caută și șterge subtitrari")
+    reporter.set_result("-")
+    reporter.report("Processing", item=f"Search & Delete: {keywords_input}")
+    
+    if not keywords_input: 
+        reporter.report("Idle", item="Câmpul de căutare este gol")
+        return
+
+    required_words = list(set(keywords_input.lower().split()))
+    if not required_words: 
+        reporter.report("Idle")
+        return
+
+    search_anchor = max(required_words, key=len)
+    reporter.log(f"=== [DELETE] CĂUTARE PENTRU ȘTERGERE: {required_words} ===")
+    
+    items_found = []
+
+    try:
+        results = plex.search(search_anchor)
+        for item in results:
+            if item.type in ['movie', 'show']:
+                title_lower = item.title.lower()
+                all_words_found = True
+                for word in required_words:
+                    pattern = r'\b' + re.escape(word) + r'\b'
+                    if not re.search(pattern, title_lower):
+                        all_words_found = False
+                        break
+                
+                if all_words_found:
+                    if item.type == 'show':
+                        for ep in item.episodes():
+                            items_found.append(ep)
+                    else:
+                        items_found.append(item)
+                    
+    except Exception as e:
+        reporter.log(f"[DELETE] Eroare căutare Plex: {e}")
+        reporter.report("Idle", item="Eroare")
+        return
+
+    if not items_found:
+        reporter.log(f"=== [DELETE] NICIUN REZULTAT PENTRU: {required_words} ===")
+        reporter.report("Idle", item="Fără rezultate")
+        return
+
+    reporter.log(f"=== [DELETE] {len(items_found)} ELEMENTE CARE SE POTRIVESC CĂUTĂRII ===")
+    deleted_count = 0
+    
+    for item in items_found:
+        try:
+            item.reload()
+            media_file = get_media_file(item)
+            if not media_file: continue
+            
+            srt_path = subtitle_path(media_file)
+            item_name = get_log_name(item)
+            
+            if os.path.exists(srt_path):
+                try:
+                    os.remove(srt_path)
+                    reporter.log(f"  [STERS] {item_name}")
+                    deleted_count += 1
+                except Exception as e:
+                    reporter.log(f"  [EROARE STERGERE] {item_name}: {e}")
+            else:
+                pass 
+                
+        except Exception as e:
+            reporter.log(f"  [EROARE] {item}: {e}")
+
+    reporter.log(f"=== [DELETE] OPERAȚIUNE COMPLETĂ. SUBTITRĂRI ȘTERSE: {deleted_count} ===")
+    reporter.report("Idle", item=f"Șterse: {deleted_count}")
+
 def run_scheduled_tasks():
     reporter.log(f"=== ACTIVITATE PROGRAMATĂ ({datetime.datetime.now().strftime('%H:%M')}) ===")
     if os.getenv("SCHEDULED_CLEANUP") == "true":
@@ -329,7 +473,8 @@ if __name__ == "__main__":
         download_missing,
         cleanup_orphans,
         download_latest,
-        search_and_download
+        search_and_download,
+        search_and_delete
     ), daemon=True).start()
     
     threading.Thread(target=daily_scheduler, daemon=True).start()
@@ -339,6 +484,3 @@ if __name__ == "__main__":
     while True:
 
         time.sleep(3600)
-
-
-
