@@ -69,6 +69,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.services.async_register(DOMAIN, "search_and_download", handle_search)
 
+    async def handle_search_delete(call: ServiceCall):
+        keywords = call.data.get("keywords")
+        if not keywords:
+            _LOGGER.error("Lipsesc cuvintele cheie pentru căutare")
+            return
+
+        headers = {"X-Auth-Token": secret, "Content-Type": "application/json"}
+        payload = {"keywords": keywords}
+        api_endpoint = f"{url}/search_and_delete_subtitles"
+
+        try:
+            session = hass.data[DOMAIN][entry.entry_id]["session"]
+            async with async_timeout.timeout(10):
+                async with session.post(api_endpoint, json=payload, headers=headers) as response:
+                    if response.status != 200:
+                        _LOGGER.error("Eroare API: %s", response.status)
+                    else:
+                        _LOGGER.info("Comanda de ștergere pentru '%s' a fost trimisă.", keywords)
+        except Exception as e:
+            _LOGGER.error("Eroare la conectarea cu addon-ul Subs.ro Plex Subtitle Downloader: %s", e)
+
+    hass.services.async_register(DOMAIN, "search_and_delete", handle_search_delete)
+
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
