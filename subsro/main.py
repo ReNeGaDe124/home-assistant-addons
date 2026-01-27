@@ -8,7 +8,7 @@ import re
 from queue import Queue
 from plexapi.server import PlexServer
 from subsro.api import SubsAPI
-from subsro.plex import get_media_file, get_ids, subtitle_path
+from subsro.plex import get_media_file, get_all_media_files, get_ids, subtitle_path
 from subsro.extract import extract_srt, ensure_utf8
 from subsro.reporter import Reporter
 from subsro.matcher import sort_best_match
@@ -99,20 +99,28 @@ def worker(worker_id):
 def process(item, log_name):
     try:
         item.reload()
-        f = get_media_file(item)
-        if not f: return 'retry'
-        srt = subtitle_path(f)
-        if os.path.exists(srt):
-            ensure_utf8(srt)
+        
+        all_files = get_all_media_files(item)
+        if not all_files: return 'retry'
+
+        files_to_process = []
+        
+        for f in all_files:
+            srt = subtitle_path(f)
+            if os.path.exists(srt):
+                ensure_utf8(srt)
+            else:
+                files_to_process.append(f)
+        
+        if not files_to_process:
             reporter.set_result("Nu (subtitrarea există deja)")
             return 'skip'
-        
+
         field, val = get_ids(item)
         if not field: return 'retry'
         
         with api_lock:
             time.sleep(1) 
-            reporter.log(f"CĂUTARE: '{log_name}'")
             try:
                 results = subs.search(field, val)
                 
@@ -122,9 +130,8 @@ def process(item, log_name):
                         r_title = res.get('title', 'Fără titlu')
                         r_desc = res.get('description', 'Fără descriere')
                         r_id = res.get('id', 'N/A')
-                        reporter.log(f"[DEBUG]  #{i+1}: {r_title} (ID:{r_id}) | Desc: {r_desc}")
-                else:
-                    reporter.log(f"[DEBUG API] Niciun rezultat returnat de API.")
+                        reporter.log(f"[DEBUG API]  #{i+1}: {r_title} (ID:{r_id}) | Desc: {r_desc}")
+
 
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 429: return 'rate_limited'
@@ -145,33 +152,51 @@ def process(item, log_name):
             except: 
                 pass
 
-        try:
-            results = sort_best_match(results, f, video_season, video_episode, log_func=reporter.log)
-        except Exception as e:
-            reporter.log(f"Eroare matcher: {e}")
-            
-        for sub in results:
-            try:
-                reporter.log(f"[DEBUG API DOWNLOAD] Solicitare conținut cu ID {sub['id']} - '{sub.get('title')}'")
-                
-                with api_lock:
-                    archive_bytes = subs.download(sub['id'])
-                
-                if extract_srt(archive_bytes, srt, video_season, video_episode):
-                    reporter.log(f"SUBS.RO API: Subtitrare descărcată pentru '{log_name}'")
-                    reporter.set_result("Yes")
-                    return 'done'
-                else:
-                    reporter.log(f"[DEBUG API DOWNLOAD] Arhiva cu ID {sub['id']} nu a conținut episodul corect. Trec la următoarea.")
-                    continue
-
-            except Exception as e: 
-                reporter.log(f"[DEBUG API ERROR] Eroare la descărcare/extragere: {e}")
-                continue
+        success_count = 0
         
-        reporter.log(f"SUBS.RO API: Subtitrare negasită pentru '{log_name}'")
-        reporter.set_result("Nu (nu a fost gasită)")
-        return 'done'
+        for video_file in files_to_process:
+            video_filename = os.path.basename(video_file)
+            srt_target = subtitle_path(video_file)
+            
+            reporter.log(f"[SEARCH] Se caută subtitrare pentru fișierul video: {video_filename}")
+            
+            try:
+                sorted_results = sort_best_match(results, video_file, video_season, video_episode, log_func=reporter.log)
+            except Exception as e:
+                reporter.log(f"Eroare matcher pentru {video_filename}: {e}")
+                sorted_results = results
+
+            downloaded_for_this_file = False
+            
+            for sub in sorted_results:
+                try:
+                    reporter.log(f"[DEBUG API DOWNLOAD] Solicitare conținut cu ID {sub['id']} - '{sub.get('title')}'")
+                    
+                    with api_lock:
+                        archive_bytes = subs.download(sub['id'])
+                    
+                    if extract_srt(archive_bytes, srt_target, video_season, video_episode, video_filename=video_filename):
+                        reporter.log(f"SUBS.RO API: Subtitrare descărcată pentru fișierul video: '{video_filename}'")
+                        downloaded_for_this_file = True
+                        success_count += 1
+                        break
+                    else:
+                        reporter.log(f"[DEBUG API DOWNLOAD] Arhiva cu ID {sub['id']} nu a conținut fișierul corect.")
+                        continue
+
+                except Exception as e: 
+                    reporter.log(f"[DEBUG API ERROR] Eroare la descărcare/extragere: {e}")
+                    continue
+            
+            if not downloaded_for_this_file:
+                 reporter.log(f"SUBS.RO API: Nu s-a găsit subtitrare pentru '{video_filename}'")
+
+        if success_count > 0:
+            reporter.set_result("Da")
+            return 'done'
+        else:
+            reporter.set_result("Nu (nu a fost gasită)")
+            return 'done'
         
     except Exception as e:
         reporter.log(f"Eroare procesare {log_name}: {e}")
@@ -201,15 +226,15 @@ def cleanup_orphans():
                         video_base = srt_path.replace(".ro.srt", "")
                         video_exists = any(os.path.exists(video_base + ext) for ext in ['.mkv', '.mp4', '.avi', '.ts', '.mov', '.m4v'])
                         if not video_exists:
-                            reporter.log(f"[CLEANUP] Ștergere subtitrare orfană -> {file}")
+                            reporter.log(f"  [CLEANUP] Ștergere subtitrare orfană -> {file}")
                             try: os.remove(srt_path)
                             except: pass
                 if not os.listdir(root) and root not in plex_locations:
-                    reporter.log(f"[CLEANUP] Ștergere folder gol -> {root}")
+                    reporter.log(f"  [CLEANUP] Ștergere folder gol -> {root}")
                     try: os.rmdir(root)
                     except: pass
     except Exception as e:
-        reporter.log(f"[CLEANUP] Eroare: {e}")
+        reporter.log(f"  [CLEANUP] Eroare: {e}")
 
     finally:
         reporter.log("=== [CLEANUP] FINALIZAT ===")
@@ -263,21 +288,26 @@ def download_latest():
             
             try:
                 latest.reload()
-                media_file = get_media_file(latest)
-                if media_file:
+                all_files = get_all_media_files(latest)
+                missing_subs = False
+                
+                for media_file in all_files:
                     srt_path = subtitle_path(media_file)
-                    if os.path.exists(srt_path):
-                        item_name = get_log_name(latest)
-                        reporter.set_item(item_name)
-                        reporter.set_result("Nu (subtitrarea există deja)")
-                        reporter.log(f"SKIP: Subtitrarea există deja pentru '{item_name}'")
-                        reporter.report("Idle")
-                        return
+                    if not os.path.exists(srt_path):
+                        missing_subs = True
+                        break
+                
+                if not missing_subs and all_files:
+                    item_name = get_log_name(latest)
+                    reporter.set_item(item_name)
+                    reporter.set_result("Nu (subtitrarea există deja)")
+                    reporter.log(f"SKIP: Toate versiunile pentru '{item_name}' au deja subtitrare.")
+                    reporter.report("Idle", item=item_name)
+                    return
             except Exception as e:
-                reporter.log(f"[LATEST] Eroare la verificarea existenței: {e}")
-            
-            
-            process_single(latest.ratingKey, action_override="Download Subtitle for Latest Video", clear_log=False)
+                reporter.log(f"[LATEST] Eroare: {e}")
+
+            process_single(latest.ratingKey, action_override="Descărcare subtitrare pentru cel mai recent video", clear_log=False)
         else:
             reporter.report("Idle", item="Nu a fost găsit ultimul video")
             
@@ -365,6 +395,9 @@ def search_and_download(keywords_input):
         reporter.log(f"=== [SEARCH] NICIUN REZULTAT PENTRU: {required_words} ===")
         reporter.report("Idle", item="Fără rezultate")
 
+import os
+import re
+
 def search_and_delete(keywords_input):
     reporter.clear_log()
     reporter.set_action("Caută și șterge subtitrari")
@@ -415,32 +448,40 @@ def search_and_delete(keywords_input):
         return
 
     reporter.log(f"=== [DELETE] {len(items_found)} ELEMENTE CARE SE POTRIVESC CĂUTĂRII ===")
+    
     deleted_count = 0
     
     for item in items_found:
         try:
             item.reload()
-            media_file = get_media_file(item)
-            if not media_file: continue
+            all_media_files = get_all_media_files(item)
+            if not all_media_files: continue
             
-            srt_path = subtitle_path(media_file)
-            item_name = get_log_name(item)
+            item_base_name = get_log_name(item)
             
-            if os.path.exists(srt_path):
-                try:
-                    os.remove(srt_path)
-                    reporter.log(f"  [STERS] {item_name}")
-                    deleted_count += 1
-                except Exception as e:
-                    reporter.log(f"  [EROARE STERGERE] {item_name}: {e}")
-            else:
-                pass 
+            for media_file in all_media_files:
+                srt_path = subtitle_path(media_file)
+                video_filename = os.path.basename(media_file)
+                
+                if os.path.exists(srt_path):
+                    try:
+                        os.remove(srt_path)
+                        
+                        deleted_info = f"{video_filename}"
+                        
+                        reporter.log(f"  [DELETE] A fost ștearsă subtitrarea pentru {deleted_info}")
+                        deleted_count += 1
+                    except Exception as e:
+                        reporter.log(f"  [DELETE ERROR] {video_filename}: {e}")
+                else:
+                    pass
                 
         except Exception as e:
-            reporter.log(f"  [EROARE] {item}: {e}")
+            reporter.log(f"  [DELETE ERROR] {item}: {e}")
 
     reporter.log(f"=== [DELETE] OPERAȚIUNE COMPLETĂ. SUBTITRĂRI ȘTERSE: {deleted_count} ===")
-    reporter.report("Idle", item=f"Șterse: {deleted_count}")
+
+    reporter.report("Idle", item=f"Subtitrari șterse: {deleted_count}")
 
 def run_scheduled_tasks():
     reporter.log(f"=== ACTIVITATE PROGRAMATĂ ({datetime.datetime.now().strftime('%H:%M')}) ===")
