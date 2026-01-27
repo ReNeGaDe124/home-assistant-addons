@@ -115,10 +115,10 @@ title: Subs.ro Plex Subtitle Downloader
 ### 🟢🟡🔴 Exemple de posibile rezultate in sectiunea `Attributes` a senzorului `Status`:
 
 <p>
-  <img src="https://github.com/user-attachments/assets/555599f3-0125-4de3-b7ef-84fd63a6d49e" width="230" />
-  <img src="https://github.com/user-attachments/assets/1ed95ae3-2df2-4fb1-bbbd-1446cfa9f6d7" width="230" />
-  <img src="https://github.com/user-attachments/assets/a99dfce8-80cc-41f5-8352-e230caff852d" width="230" />
-  <img src="https://github.com/user-attachments/assets/8aaf0139-69b5-450f-a99b-acd4ddd8b4f2" width="230" />
+  <img src="https://github.com/user-attachments/assets/555599f3-0125-4de3-b7ef-84fd63a6d49e" width="200" />
+  <img src="https://github.com/user-attachments/assets/1ed95ae3-2df2-4fb1-bbbd-1446cfa9f6d7" width="200" />
+  <img src="https://github.com/user-attachments/assets/a99dfce8-80cc-41f5-8352-e230caff852d" width="200" />
+  <img src="https://github.com/user-attachments/assets/8aaf0139-69b5-450f-a99b-acd4ddd8b4f2" width="200" />
 </p>
 
 ## 📦 Dependente
@@ -163,5 +163,6 @@ title: Subs.ro Plex Subtitle Downloader
 </p>
 
   5. Pune valoarea copiata in campul `subsro_api_key` din Add-on.
+
 
 
