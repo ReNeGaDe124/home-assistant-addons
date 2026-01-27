@@ -1,4 +1,6 @@
-![logo](https://github.com/user-attachments/assets/85c9a86d-de41-48da-a4a1-e16a0c6e04ac)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/85c9a86d-de41-48da-a4a1-e16a0c6e04ac" alt="logo">
+</p>
 
 # Subs.ro Plex Subtitle Downloader - Add-on si Integrare pentru Home Assistant
 
@@ -164,6 +166,12 @@ title: Subs.ro Plex Subtitle Downloader
 
   5. Pune valoarea copiata in campul `subsro_api_key` din Add-on.
 
+## 📜 Note de final ❤️
+  - Multumiri echipei Subs.ro pentru activarea API-ului! Fara acesta proiectul de fata nu ar fi fost posibil. Logoul si subtitrarile apartin Subs.ro. 🙏
+  - Cod sursa al proiectului realizat in totalitate folosind Google Gemini. 🤖
+  - Daca aveti idei de imbunatatire sau doriti sa semnalati probleme cu acest proiect, le astept cu placere. 🤗
+  - Acesta este un proiect facut din pasiune dar daca iti place, il gasesti folositor si vrei sa sustii dezvoltarea lui pe viitor, dar si munca depusa pana acum, o poti face printr-o contributie scanand codul QR generat de Revolut de mai jos. Va multumesc! 🫶
 
-
-
+<p align="center">
+<img width="250" alt="revolut" src="https://github.com/user-attachments/assets/279c753c-e420-47fa-95a7-ed6c45c263e5" />
+</p>
