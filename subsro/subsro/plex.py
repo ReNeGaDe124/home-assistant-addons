@@ -4,6 +4,20 @@ def get_media_file(item):
     try: return item.media[0].parts[0].file
     except: return None
 
+def get_all_media_files(item):
+    files = []
+    try:
+        if not hasattr(item, 'media'):
+            return files
+        
+        for media in item.media:
+            for part in media.parts:
+                if part.file:
+                    files.append(part.file)
+    except Exception:
+        pass
+    return files
+
 def get_ids(item):
     target = item
     if item.type == 'episode':

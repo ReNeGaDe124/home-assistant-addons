@@ -5,6 +5,24 @@ import subprocess
 import re
 import charset_normalizer
 
+SOURCE_TAGS = [
+    'bluray', 'blu-ray', 'bdrip', 'brrip', 
+    'web-dl', 'webdl', 'webrip', 'web', 
+    'hdtv', 'tvrip', 
+    'dvdrip', 'dvd', 'remux'
+]
+
+def extract_tags(text):
+    found = set()
+    if not text: return found
+    text = text.lower()
+    for tag in SOURCE_TAGS:
+        if tag in text:
+            if 'web' in tag: found.add('web')
+            elif 'bluray' in tag or 'bdrip' in tag: found.add('bluray')
+            else: found.add(tag)
+    return found
+
 def ensure_utf8(file_path):
     try:
         with open(file_path, "rb") as f:
@@ -44,7 +62,7 @@ def ensure_utf8(file_path):
     except Exception:
         return 'error'
 
-def extract_srt(archive_bytes, target_path, target_season=None, target_episode=None):
+def extract_srt(archive_bytes, target_path, target_season=None, target_episode=None, video_filename=None):
     
     with tempfile.TemporaryDirectory() as tmp_dir:
         archive_path = os.path.join(tmp_dir, "subs.rar")
@@ -89,19 +107,40 @@ def extract_srt(archive_bytes, target_path, target_season=None, target_episode=N
                     return False
                     
             else:
-                all_srt_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
-                chosen_srt = all_srt_files[0]
+                if video_filename:
+                    video_tags = extract_tags(video_filename)
+                    
+                    def get_score(srt_path):
+                        srt_name = os.path.basename(srt_path)
+                        srt_tags = extract_tags(srt_name)
+                        
+                        common_count = len(video_tags.intersection(srt_tags))
+                        
+                        return (common_count, os.path.getsize(srt_path))
+                    
+                    all_srt_files.sort(key=get_score, reverse=True)
+                    chosen_srt = all_srt_files[0]
+                else:
+                    all_srt_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
+                    chosen_srt = all_srt_files[0]
 
             if chosen_srt:
                 ensure_utf8(chosen_srt)
+                
                 if os.path.exists(target_path):
                     try: os.remove(target_path)
                     except: pass
-                shutil.move(chosen_srt, target_path)
+                
+                shutil.copyfile(chosen_srt, target_path)
+
                 try:
-                    os.utime(target_path, None)
+                    subprocess.run(["touch", target_path], check=False)
                 except:
-                    pass
+                    try:
+                        os.utime(target_path, None)
+                    except:
+                        pass
+
                 return True
             
             return False

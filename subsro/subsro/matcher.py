@@ -67,7 +67,7 @@ def calculate_score(sub, video_tags, video_season, video_episode, log_func=None)
             score += 100
             reasons.append(f"POTRIVIRE SEZON S{s_range_start}-{s_range_end}")
         else:
-            if log_func: log_func(f"[DEBUG]   [SKIP] Sezon greșit pentru '{title}'. Video: S{video_season}, Sub: S{s_range_start}-{s_range_end}")
+            if log_func: log_func(f"[DEBUG MATCHER]   [SKIP] Sezon greșit pentru '{title}'. Video: S{video_season}, Sub: S{s_range_start}-{s_range_end}")
             return -100
 
     elif s_exact and e_exact:
@@ -79,10 +79,10 @@ def calculate_score(sub, video_tags, video_season, video_episode, log_func=None)
                 score += 95
                 reasons.append(f"POTRIVIRE EPISOD (Video E{video_episode} <= Sub E{e_exact})")
             else:
-                if log_func: log_func(f"[DEBUG]   [SKIP] Episod prea nou pentru '{title}'. Video: E{video_episode}, Sub: E{e_exact}")
+                if log_func: log_func(f"[DEBUG MATCHER]   [SKIP] Episod prea nou pentru '{title}'. Video: E{video_episode}, Sub: E{e_exact}")
                 return -100
         else:
-            if log_func: log_func(f"[DEBUG]   [SKIP] Sezon greșit pentru '{title}'. Video: S{video_season}, Sub: S{s_exact}")
+            if log_func: log_func(f"[DEBUG MATCHER]   [SKIP] Sezon greșit pentru '{title}'. Video: S{video_season}, Sub: S{s_exact}")
             return -100
 
     else:
@@ -93,7 +93,7 @@ def calculate_score(sub, video_tags, video_season, video_episode, log_func=None)
                 score += 50
                 reasons.append(f"POTRIVIRE SEZON S{found_s}")
             else:
-                if log_func: log_func(f"[DEBUG]   [SKIP] Sezon greșit pentru '{title}'. Video: S{video_season}, Sub: S{found_s}")
+                if log_func: log_func(f"[DEBUG MATCHER]   [SKIP] Sezon greșit pentru '{title}'. Video: S{video_season}, Sub: S{found_s}")
                 return -100
 
     common_tags = video_tags.intersection(sub_tags)
@@ -106,7 +106,7 @@ def calculate_score(sub, video_tags, video_season, video_episode, log_func=None)
         reasons.append("COMPLET")
 
     if score > 0 and log_func:
-        log_func(f"[DEBUG]   [VALID] {sub.get('title')} - SCOR: {score} | Tag-uri: {sub_tags} | Motiv: {', '.join(reasons)}")
+        log_func(f"[DEBUG MATCHER]   [VALID] {sub.get('title')} - SCOR: {score} | Tag-uri: {sub_tags} | Motiv: {', '.join(reasons)}")
         
     return score
 
@@ -121,7 +121,6 @@ def sort_best_match(results, video_filepath, video_season, video_episode, log_fu
         video_tags = extract_tags(filename) | extract_tags(dirname)
         
         if log_func:
-            log_func(f"[DEBUG MATCHER] Analizez fișier video: {filename}")
             log_func(f"[DEBUG MATCHER] Informații detectate: Sezon {video_season}, Episod {video_episode}")
             log_func(f"[DEBUG MATCHER] Tag-uri sursă detectate: {video_tags}")
             log_func(f"[DEBUG MATCHER] Analizez {len(results)} arhive cu subtitrări...")
