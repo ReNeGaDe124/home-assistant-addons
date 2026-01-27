@@ -44,17 +44,58 @@ Descarcă automat subtitrări în limba română de pe Subs.ro pentru Plex Media
 ## ⚙️ Configurare
 
 ### 🧩 Add-on
-<p align="left">
+<p align="center">
   <img src="https://github.com/user-attachments/assets/5de500b1-58ed-45f2-bda0-eb24c51afb8e" width="250" />
 </p>
 
 | Optiune | Tip | Implicit | Descriere |
 |--------|------|---------|-------------|
 | `plex_url` | str | `http://localhost:32400` | Linkul catre serverul Plex Media Server |
-| `plex_token` | str | | Token de autentificare Plex Media Server - X-Plex-Token (vezi aici cum sa il obtii) |
+| `plex_token` | str | | Token de autentificare Plex Media Server - X-Plex-Token (vezi [aici](https://github.com/ReNeGaDe124/home-assistant-addons/tree/homeassistant?tab=readme-ov-file#-x-plex-token) cum sa il obtii) |
+| `subsro_api_key` | str | | Token de autentificare API Subs.ro (vezi [aici](https://github.com/ReNeGaDe124/home-assistant-addons/tree/homeassistant?tab=readme-ov-file#-x-plex-token) cum sa il obtii) |
 
 
 
 
 ## 📦 Dependente
+
 ### 🎬 X-Plex-Token
+
+  1. Conecteaza-te pe serverul tau Plex Media Server.
+  2. Apasa pe butonul `⋮` pe unul din obiectele din librarie si apoi pe optiunea `Get Info`.
+
+<p align="center">
+  <img width="338" alt="get-info" src="https://github.com/user-attachments/assets/4d70b189-c404-4439-8e20-14833bc6e6bb" />
+</p>
+
+  3. Apasa pe butonul `View XML`.
+
+<p align="center">
+<img width="500" alt="view-xml" src="https://github.com/user-attachments/assets/e5ee4523-5657-460d-bb61-c01a9cddd7ca" />
+</p>
+
+  4. Copiaza din bara de adresa a paginii care se deschide valoarea de la sfarsitul linkului, de dupa `X-Plex-Token=`.
+
+<p align="center">
+<img width="693" height="108" alt="x-plex-token" src="https://github.com/user-attachments/assets/79835b17-f494-4ee8-bdba-3bb3e36e3982" />
+</p>
+
+  5. Pune valoarea copiata in campul `plex_token` din Add-on 🧩.
+
+### 💬 API Token Subs.ro
+
+  1. Creaza-ti cont pe [Subs.ro](https://subs.ro/).
+  2. Logheaza-te si acceseaza [pagina de profil](https://subs.ro/utilizator/profil).
+  3. Mergi la sectiunea `Acces API` si apasa pe butonul `Genereaza o cheie API`.
+
+<p align="center">
+<img width="300" alt="subsro-generate-api-key" src="https://github.com/user-attachments/assets/7f744f0c-b054-4ff2-b4ed-c7ad71791dc7" />
+</p>
+
+  4. Copiaza valoarea din sectiunea `Cheia dumneavoastra API`.
+
+<p align="center">
+<img width="350" alt="subsro-copy-api-key" src="https://github.com/user-attachments/assets/9e8c7940-2c7a-4ce6-acb0-6cab32a63279" />
+</p>
+
+  5. Pune valoarea copiata in campul `subsro_api_key` din Add-on 🧩.
