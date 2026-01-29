@@ -1,7 +1,8 @@
 {
   "name": "Subs.ro Plex Subtitle Downloader",
   "slug": "subsro",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "image": "ghcr.io/ReNeGaDe124/home-assistant-addons/{arch}-subsro",
   "description": "Descarcă automat subtitrări în limba română de pe Subs.ro pentru Plex",
   "startup": "application",
   "boot": "auto",
@@ -31,4 +32,5 @@
     "scan_time": "str",
     "debug_log": "bool"
   }
+
 }
