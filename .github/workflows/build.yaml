@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: ["aarch64", "amd64""]
+        arch: ["aarch64", "amd64"]
 
     steps:
       - name: Checkout source code
